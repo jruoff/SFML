@@ -73,6 +73,15 @@ Socket::Status TcpListener::listen(unsigned short port, const IpAddress& address
     if ((address == IpAddress::None) || (address == IpAddress::Broadcast))
         return Error;
 
+#ifdef SFML_SYSTEM_LINUX
+    // Enable address reuse.
+    int enable = 1;
+    if (setsockopt(getHandle(), SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+        err() << "Failed to enable SO_REUSEADDR" << std::endl;
+    }
+#endif  // SFML_SYSTEM_LINUX
+
     // Bind the socket to the specified port
     sockaddr_in addr = priv::SocketImpl::createAddress(address.toInteger(), port);
     if (bind(getHandle(), reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == -1)
